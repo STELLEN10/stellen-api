@@ -1,0 +1,96 @@
+version: '3.9'
+
+services:
+  # ── PostgreSQL ─────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: stellenapi_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       stellenapi
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── API ────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      target: production
+    container_name: stellenapi
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV:    production
+      PORT:        3000
+      DB_HOST:     postgres
+      DB_PORT:     5432
+      DB_NAME:     stellenapi
+      DB_USER:     postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET:             change_this_in_prod_min_32_chars!!
+      JWT_REFRESH_SECRET:     change_this_refresh_secret_min_32!!
+      JWT_EXPIRES_IN:         15m
+      JWT_REFRESH_EXPIRES_IN: 30d
+      RATE_LIMIT_WINDOW_MS:   900000
+      RATE_LIMIT_MAX:         100
+      AUTH_RATE_LIMIT_MAX:    10
+      LOG_LEVEL:              info
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:3000/api/v1/health || exit 1']
+      interval: 30s
+      timeout:  10s
+      retries:  3
+      start_period: 15s
+    volumes:
+      - ./logs:/app/logs
+
+  # ── pgAdmin (dev only) ─────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: stellenapi_pgadmin
+    restart: unless-stopped
+    profiles: ['dev']   # only starts with: docker compose --profile dev up
+    environment:
+      PGADMIN_DEFAULT_EMAIL:    admin@stellenapi.dev
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - '5050:80'
+    depends_on:
+      - postgres
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+  # ── Migrate (one-shot) ─────────────────────────────────────
+  migrate:
+    build:
+      context: .
+      target: production
+    container_name: stellenapi_migrate
+    command: node src/config/migrate.js
+    environment:
+      DB_HOST:     postgres
+      DB_PORT:     5432
+      DB_NAME:     stellenapi
+      DB_USER:     postgres
+      DB_PASSWORD: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+
+volumes:
+  pgdata:
+  pgadmin_data:

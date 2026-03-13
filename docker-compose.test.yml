@@ -1,0 +1,37 @@
+version: '3.9'
+
+services:
+  postgres_test:
+    image: postgres:16-alpine
+    container_name: stellenapi_db_test
+    environment:
+      POSTGRES_DB:       stellenapi_test
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5433:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api_test:
+    build:
+      context: .
+      target: build
+    container_name: stellenapi_test
+    command: sh -c "node src/config/migrate.js && npm test"
+    environment:
+      NODE_ENV:           test
+      DB_HOST:            postgres_test
+      DB_PORT:            5432
+      DB_NAME:            stellenapi_test
+      DB_USER:            postgres
+      DB_PASSWORD:        postgres
+      JWT_SECRET:         test_secret_32chars_minimum_here!
+      JWT_REFRESH_SECRET: test_refresh_32chars_minimum_here!
+      LOG_LEVEL:          error
+    depends_on:
+      postgres_test:
+        condition: service_healthy
