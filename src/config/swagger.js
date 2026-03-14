@@ -6,11 +6,11 @@ const options = {
     info: {
       title:       'Stellen API',
       version:     '1.0.0',
-      description: 'A robust REST API with JWT auth, rate limiting, and PostgreSQL. Built by Stellen Ncube.',
+      description: 'A robust REST API with JWT auth, rate limiting, and PostgreSQL. Built by Stellen.',
       contact: {
-        name:  'Stellen Ncube',
+        name:  'Stellen',
         email: 'officialstellen@gmail.com',
-        url:   'https://github.com/stellen',
+        url:   'https://github.com/stellen10',
       },
       license: { name: 'MIT' },
     },
@@ -33,7 +33,7 @@ const options = {
           type: 'object',
           required: ['name','email','password'],
           properties: {
-            name:     { type:'string', example:'Stellen Ncube', minLength:2, maxLength:100 },
+            name:     { type:'string', example:'Stellen', minLength:2, maxLength:100 },
             email:    { type:'string', format:'email', example:'user@example.com' },
             password: { type:'string', minLength:8, example:'Secure@1234', description:'Min 8 chars, must contain uppercase, lowercase, number, special char' },
           },
