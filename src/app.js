@@ -81,7 +81,7 @@ app.get('/', (req, res) => res.json({
   message: 'Stellen API v1.0.0',
   docs:    '/docs',
   health:  '/api/v1/health',
-  author:  'Stellen Ncube — officialstellen@gmail.com',
+  author:  'Stellen — officialstellen@gmail.com',
 }));
 
 // ── 404 + error handlers ──────────────────────────────────────
